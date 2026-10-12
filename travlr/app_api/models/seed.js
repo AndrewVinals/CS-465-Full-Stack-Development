@@ -1,18 +1,11 @@
 const fs = require('fs');
+const path = require('path');
 const mongoose = require('./db');
 const Trip = require('./travlr');
-
-// Read seed data from JSON file
-var trips = JSON.parse(fs.readFileSync('./data/trips.json', 'utf8'));
-
-// Delete any existing records, then insert seed data
-const seedDB = async () => {
-    await Trip.deleteMany({});
-    await Trip.insertMany(trips);
-};
-
-// Close the MongoDB connection and exit
-seedDB().then(async () => {
-    await mongoose.connection.close();
-    process.exit(0);
-});
+const trips = JSON.parse(fs.readFileSync(path.join(__dirname,'../../data/trips.json'),'utf8'));
+// Safe to rerun: adds missing sample trips without erasing user-created trips.
+(async () => {
+  await mongoose.connection.asPromise();
+  for (const trip of trips) await Trip.updateOne({code:trip.code},{$setOnInsert:trip},{upsert:true,runValidators:true});
+  await mongoose.connection.close();
+})().catch(async err => { console.error(err); await mongoose.connection.close(); process.exitCode=1; });

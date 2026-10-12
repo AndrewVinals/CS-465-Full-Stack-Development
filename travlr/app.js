@@ -28,6 +28,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.get('/travel.html', (req,res) => res.redirect('/travel'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
@@ -35,7 +36,15 @@ app.use('/users', usersRouter);
 app.use('/travel', travelRouter);
 
 // Wire up API routes
-app.use('/api', apiRouter);
+app.use('/api', (req, res, next) => {
+  if (req.headers.origin === 'http://localhost:4200') res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+}, apiRouter);
+// The original static links should display live database trips too.
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -48,7 +57,7 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   res.status(err.status || 500);
-  res.render('error');
+  res.send('Unable to process request.');
 });
 
 module.exports = app;
