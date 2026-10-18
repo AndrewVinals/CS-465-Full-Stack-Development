@@ -1,3 +1,5 @@
+require('dotenv').config();
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) throw new Error('Set a JWT_SECRET of at least 32 characters in .env');
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -39,7 +41,7 @@ app.use('/travel', travelRouter);
 app.use('/api', (req, res, next) => {
   if (req.headers.origin === 'http://localhost:4200') res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 }, apiRouter);
